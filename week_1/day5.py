@@ -30,6 +30,7 @@ MODEL = "qwen2.5"
 # Initialize client (configured for local Ollama)
 openai = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 console = Console()
+display = console.print  # Terminal replacement for notebook's display()
 
 
 # ---------------------------------------------------------------------------
@@ -70,12 +71,12 @@ def select_relevant_links(url):
     console.print(f"[cyan]Selecting relevant links for {url} using {MODEL}...[/cyan]")
     get_links_user_prompt_value = get_links_user_prompt(url)
     get_link_system_prompt_value = get_link_system_prompt()
-    console.print(
-        f"[green]✓ get_link_system_prompt: {get_link_system_prompt_value}.[/green]"
-    )
-    console.print(
-        f"[green]✓ get_links_user_prompt: {get_links_user_prompt_value}.[/green]"
-    )
+    # console.print(
+    #     f"[green]✓ get_link_system_prompt: {get_link_system_prompt_value}.[/green]"
+    # )
+    # console.print(
+    #     f"[green]✓ get_links_user_prompt: {get_links_user_prompt_value}.[/green]"
+    # )
     response = openai.chat.completions.create(
         model=MODEL,
         messages=[
@@ -163,18 +164,19 @@ def stream_brochure(company_name, url):
             {"role": "system", "content": brochure_system_prompt},
             {"role": "user", "content": prompt},
         ],
-        stream=True,
+        # stream=True,
     )
-
-    console.rule(f"[bold green]{company_name} Live Stream[/bold green]")
+    result = stream.choices[0].message.content
+    display(Markdown(result))
+    # console.rule(f"[bold green]{company_name} Live Stream[/bold green]")
 
     # 'Live' + 'Markdown' dynamically re-renders terminal Markdown as tokens arrive
-    full_response = ""
-    with Live(console=console, refresh_per_second=10) as live:
-        for chunk in stream:
-            token = chunk.choices[0].delta.content or ""
-            full_response += token
-            live.update(Markdown(full_response))
+    # full_response = ""
+    # with Live(console=console, refresh_per_second=10) as live:
+    #     for chunk in stream:
+    #         token = chunk.choices[0].delta.content or ""
+    #         full_response += token
+    #         live.update(Markdown(full_response))
 
 
 # ---------------------------------------------------------------------------
@@ -193,12 +195,12 @@ This script replaces **Jupyter Notebook's** `display(Markdown(...))` with `rich.
 - `Live(console=console)` for real-time streaming markdown
 - `console.status(...)` for interactive loading spinners
     """
-    console.print(select_relevant_links("https://edwarddonner.com"))
+    # console.print(select_relevant_links("https://edwarddonner.com"))
 
     # Example 2: To generate or stream a live company brochure, uncomment below:
-    # company = "HuggingFace"
-    # url = "https://huggingface.co"
-    # stream_brochure(company, url)
+    company = "Transfez"
+    url = "https://www.transfez.com"
+    stream_brochure(company, url)
 
 
 if __name__ == "__main__":
