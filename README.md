@@ -4,6 +4,8 @@ Personal learning and practice repository following the course **[LLM Engineerin
 
 ---
 
+agy --conversation=5e128477-da29-44c9-b1cd-7633d4c2b0b3
+
 ## 🎯 Repository Goals
 
 - **Hands-on Implementation**: Reimplementing and extending the course lessons from Jupyter Notebooks (`.ipynb`) into standalone, modular Python (`.py`) applications.
