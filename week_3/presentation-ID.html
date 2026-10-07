@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal City Explorer - Architecture Deck</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: #111827;
+            --surface-border: #1f2937;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --accent-green: #10b981;
+            --accent-pink: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --accent-orange: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-sub: #9ca3af;
+            --code-bg: #030712;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, rgba(11, 15, 25, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .stage {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 1100px;
+            height: 680px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--surface-border);
+            border-radius: 20px;
+            padding: 44px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid var(--primary);
+            color: #a5b4fc;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 14px;
+            align-self: flex-start;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #ffffff 30%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            font-size: 1.05rem;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-icon {
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+        }
+
+        .card h3 {
+            font-size: 1.15rem;
+            color: #e5e7eb;
+        }
+
+        .card p {
+            font-size: 0.88rem;
+            color: var(--text-sub);
+            line-height: 1.45;
+        }
+
+        .card .metric {
+            margin-top: auto;
+            padding-top: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .mac-window {
+            background: var(--code-bg);
+            border: 1px solid var(--surface-border);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-height: 420px;
+        }
+
+        .mac-header {
+            background: #111827;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        .mac-title {
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-family: monospace;
+            margin-left: 10px;
+        }
+
+        pre.code-container {
+            padding: 20px;
+            overflow-x: auto;
+            overflow-y: auto;
+            font-family: "JetBrains Mono", Consolas, "Fira Code", monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+            user-select: text;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        .kwd { color: #f43f5e; font-weight: 600; }
+        .func { color: #38bdf8; }
+        .str { color: #a3e635; }
+        .comment { color: #64748b; font-style: italic; }
+        .num { color: #fb923c; }
+        .obj { color: #c084fc; }
+
+        .arch-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px dashed var(--surface-border);
+        }
+
+        .arch-node {
+            flex: 1;
+            background: var(--surface-color);
+            border: 1px solid var(--surface-border);
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .arch-node h4 {
+            font-size: 0.95rem;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .arch-node p {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+
+        .arch-arrow {
+            color: var(--primary);
+            font-weight: 900;
+            font-size: 1.4rem;
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            align-items: stretch;
+            height: calc(100% - 90px);
+        }
+
+        .details-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .details-list li {
+            position: relative;
+            padding-left: 24px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            color: #d1d5db;
+        }
+
+        .details-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .analogy-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .analogy-box h4 {
+            color: #a5b4fc;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .analogy-box p {
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: var(--surface-color);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            background: #1f2937;
+            transform: translateY(-2px);
+        }
+
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot-nav {
+            width: 8px;
+            height: 8px;
+            background: #374151;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .dot-nav.active {
+            width: 24px;
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <div class="stage">
+
+        <!-- Slide 1: Judul -->
+        <div class="slide active">
+            <span class="badge">Arsitektur AI Terdistribusi</span>
+            <h1>Multimodal City Explorer</h1>
+            <p class="subtitle">Menjalankan LLM, Sintesis Suara, dan Latent Diffusion di Cloud Gratisan tanpa Langganan API Berbayar[cite: 1].</p>
+            
+            <div class="grid-cards" style="margin-top: 24px;">
+                <div class="card">
+                    <div class="card-icon">🧠</div>
+                    <h3>Reasoning & Validasi</h3>
+                    <p>Model teks memvalidasi nama kota sekaligus mengekstrak landmark dan kuliner khas secara terstruktur[cite: 1].</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎙️</div>
+                    <h3>Sintesis Suara (TTS)</h3>
+                    <p>Sintesis audio neural VITS berkecepatan tinggi yang langsung dialirkan via buffer memori tanpa simpan ke harddisk[cite: 1].</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎨</div>
+                    <h3>Generasi Gambar</h3>
+                    <p>Pipeline Stable Diffusion fleksibel dengan berbagai gaya seni, dan otomatis batal kalau nama kotanya ngawur[cite: 1].</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Apa itu Colab -->
+        <div class="slide">
+            <span class="badge">Infrastruktur Komputasi</span>
+            <h2>Apa itu Google Colab?</h2>
+            <p class="subtitle">Solusi akses GPU bertenaga tanpa beli hardware mahal atau langganan API berbayar[cite: 1].</p>
+            
+            <div class="grid-cards">
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>GPU NVIDIA T4 16 GB</h3>
+                    <p>Hardware bertenaga CUDA di cloud yang sanggup menampung 3 model AI sekaligus dalam satu VRAM bersamaan[cite: 1].</p>
+                    <div class="metric">Biaya: Rp 0 / Paket Gratis</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💻</div>
+                    <h3>Bebas Beban di Laptop</h3>
+                    <p>Laptop lokal tetap dingin dan enteng karena beban berat komputasi dan neural network dipindah ke server Google[cite: 1].</p>
+                    <div class="metric">Host: Linux Container (Ubuntu)</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <h3>Toolkit AI Siap Pakai</h3>
+                    <p>Sudah langsung terpasang PyTorch, driver CUDA, dan library Hugging Face bawaan untuk kebutuhan eksperimen cepat.</p>
+                    <div class="metric">Runtime: Python 3.10+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Bedah Mesin Colab (Bukan Cuma Notebook) -->
+        <div class="slide">
+            <span class="badge">Sistem Operasi</span>
+            <h2>Colab Bukan Cuma Sekadar Notebook</h2>
+            <p class="subtitle">Di balik antarmuka web, Colab memberi akses container Linux Ubuntu utuh dengan akses root.</p>
+
+            <div class="grid-cards">
+                <div class="card">
+                    <div class="card-icon">🐧</div>
+                    <h3>Full Linux VM (Ubuntu)</h3>
+                    <p>Bisa menjalankan perintah shell apa pun via tanda seru (<code>!apt update</code>, <code>!git clone</code>, <code>!curl</code>).</p>
+                    <div class="metric">Hak Akses: root</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💎</div>
+                    <h3>Bisa Jalankan Apa Saja</h3>
+                    <p>Kernel default memang Python, tapi sistem bisa dipasangi Ruby, Go, Node.js, hingga background service seperti Redis.</p>
+                    <div class="metric">Contoh: Bisa Run Rails Server</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⏳</div>
+                    <h3>Sifat Ephemeral</h3>
+                    <p>Mesin bersifat sementara. Jika runtime terputus atau idle lama, container akan di-reset ke kondisi awal.</p>
+                    <div class="metric">Storage: Scratch Disk Cloud</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Masalah NAT & Reverse Tunneling -->
+        <div class="slide">
+            <span class="badge">Konsep Jaringan</span>
+            <h2>Masalah NAT & Reverse Tunneling</h2>
+            <p class="subtitle">Kenapa laptop kita nggak bisa langsung nembak IP Google Colab secara normal[cite: 1]?</p>
+
+            <div class="arch-diagram">
+                <div class="arch-node">
+                    <h4>Laptop Kita</h4>
+                    <p>Frontend Gradio (Klien)[cite: 1]</p>
+                </div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node" style="border-color: var(--accent-orange);">
+                    <h4 style="color: var(--accent-orange);">Pintu Publik (ngrok)</h4>
+                    <p>Perantara dengan Alamat Jelas[cite: 1]</p>
+                </div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node" style="border-color: var(--accent-green);">
+                    <h4 style="color: var(--accent-green);">Google Colab</h4>
+                    <p>FastAPI (Backend di Server)[cite: 1]</p>
+                </div>
+            </div>
+
+            <div class="analogy-box">
+                <h4>💡 Analogi Sederhana: Apartemen Terkunci</h4>
+                <p><strong>Masalah NAT:</strong> Colab itu ibarat kamar di apartemen mewah yang nggak punya bel langsung dan gerbang luarnya dikunci satpam (firewall). Orang dari luar (laptop kita) nggak bisa asal masuk atau manggil ke kamar itu[cite: 1].<br>
+                <strong>Solusi Reverse Tunnel (ngrok):</strong> Orang di dalam kamar (Colab) berinisiatif lari keluar nemuin pos kurir (ngrok) dan ngomong: <em>"Kalo ada titipan paket buat saya, anterin lewat lorong rahasia ini ya."</em> Jadinya laptop kita tinggal kirim paket ke pos kurir itu[cite: 1]!</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Kode Setup Tunneling & Top-Level Await -->
+        <div class="slide">
+            <span class="badge">Implementasi</span>
+            <h2>Setup Tunneling di Notebook</h2>
+            <p class="subtitle">Memanfaatkan top-level await native tanpa perlu library monkey-patch nest_asyncio[cite: 1].</p>
+
+            <div class="mac-window">
+                <div class="mac-header">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                    <span class="mac-title">colab_multimodal_backend.ipynb</span>
+                </div>
+                <pre class="code-container"><code><span class="kwd">import</span> uvicorn
+<span class="kwd">from</span> pyngrok <span class="kwd">import</span> ngrok
+
+<span class="comment"># 1. Buka jalur keluar (tunnel) dari Colab ke server ngrok[cite: 1]</span>
+NGROK_AUTH_TOKEN = <span class="str">"TOKEN_NGROK_KAMU"</span>
+ngrok.<span class="func">set_auth_token</span>(NGROK_AUTH_TOKEN)
+public_url = ngrok.<span class="func">connect</span>(<span class="num">8000</span>).public_url
+<span class="func">print</span>(<span class="str">f"🚀 URL Publik Siap Dipakai: {public_url}"</span>)
+
+<span class="comment"># 2. Jalankan server langsung di atas event loop aktif Colab via await[cite: 1]</span>
+config = uvicorn.<span class="obj">Config</span>(app, host=<span class="str">"0.0.0.0"</span>, port=<span class="num">8000</span>)
+server = uvicorn.<span class="obj">Server</span>(config)
+<span class="kwd">await</span> server.<span class="func">serve</span>()</code></pre>
+            </div>
+        </div>
+
+        <!-- Slide 6: Kode 3 Model Masuk GPU -->
+        <div class="slide">
+            <span class="badge">Manajemen VRAM</span>
+            <h2>3 Model AI dalam 1 GPU Sekaligus</h2>
+            <p class="subtitle">Menggabungkan 3 pipeline model dengan total cuma makan ~6.5 GB dari 16 GB VRAM[cite: 1].</p>
+
+            <div class="mac-window">
+                <div class="mac-header">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                    <span class="mac-title">model_loader.py (Colab)</span>
+                </div>
+                <pre class="code-container"><code><span class="kwd">import</span> torch
+<span class="kwd">from</span> transformers <span class="kwd">import</span> AutoModelForCausalLM, AutoTokenizer, VitsModel
+<span class="kwd">from</span> diffusers <span class="kwd">import</span> StableDiffusionPipeline
+
+device = <span class="str">"cuda"</span> <span class="kwd">if</span> torch.cuda.<span class="func">is_available</span>() <span class="kwd">else</span> <span class="str">"cpu"</span>
+
+<span class="comment"># 1. Model Teks & Logika: Qwen2.5-1.5B (FP16) -> Makan ~3.1 GB VRAM[cite: 1]</span>
+llm_tokenizer = AutoTokenizer.<span class="func">from_pretrained</span>(<span class="str">"Qwen/Qwen2.5-1.5B-Instruct"</span>)
+llm_model = AutoModelForCausalLM.<span class="func">from_pretrained</span>(
+    <span class="str">"Qwen/Qwen2.5-1.5B-Instruct"</span>, torch_dtype=torch.float16, device_map=<span class="str">"auto"</span>
+)
+
+<span class="comment"># 2. Model Suara: Meta MMS VITS -> Makan ~0.6 GB VRAM[cite: 1]</span>
+tts_tokenizer = AutoTokenizer.<span class="func">from_pretrained</span>(<span class="str">"facebook/mms-tts-eng"</span>)
+tts_model = VitsModel.<span class="func">from_pretrained</span>(<span class="str">"facebook/mms-tts-eng"</span>).<span class="func">to</span>(device)
+
+<span class="comment"># 3. Model Gambar: Stable Diffusion 1.5 (FP16) -> Makan ~2.8 GB VRAM[cite: 1]</span>
+sd_pipe = StableDiffusionPipeline.<span class="func">from_pretrained</span>(
+    <span class="str">"runwayml/stable-diffusion-v1-5"</span>, torch_dtype=torch.float16
+).<span class="func">to</span>(device)</code></pre>
+            </div>
+        </div>
+
+        <!-- Slide 7: Kode Streaming Memory -->
+        <div class="slide">
+            <span class="badge">Optimasi Performa</span>
+            <h2>Streaming Tanpa Simpan File ke Harddisk</h2>
+            <p class="subtitle">Memanfaatkan buffer memori RAM langsung ke respon HTTP klien untuk performa maksimal[cite: 1].</p>
+
+            <div class="mac-window">
+                <div class="mac-header">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                    <span class="mac-title">endpoints.py (FastAPI)</span>
+                </div>
+                <pre class="code-container"><code><span class="kwd">import</span> io
+<span class="kwd">import</span> scipy.io.wavfile <span class="kwd">as</span> wavfile
+<span class="kwd">from</span> fastapi.responses <span class="kwd">import</span> Response
+
+<span class="kwd">@app</span>.<span class="func">post</span>(<span class="str">"/tts"</span>)
+<span class="kwd">def</span> <span class="func">tts_endpoint</span>(req: TTSRequest):
+    inputs = tts_tokenizer(req.text, return_tensors=<span class="str">"pt"</span>).<span class="func">to</span>(device)
+    <span class="kwd">with</span> torch.<span class="func">no_grad</span>():
+        waveform = tts_model(**inputs).waveform
+
+    <span class="comment"># Ubah data tensor suara jadi format audio PCM 16-bit di dalam RAM[cite: 1]</span>
+    audio_data = waveform.<span class="func">squeeze</span>().<span class="func">cpu</span>().<span class="func">numpy</span>()
+    int16_pcm = (np.<span class="func">clip</span>(audio_data, -<span class="num">1.0</span>, <span class="num">1.0</span>) * <span class="num">32767</span>).<span class="func">astype</span>(np.int16)
+
+    <span class="comment"># Tulis ke buffer memori RAM murni tanpa nyentuh storage Colab[cite: 1]</span>
+    wav_buffer = io.<span class="obj">BytesIO</span>()
+    wavfile.<span class="func">write</span>(wav_buffer, rate=tts_model.config.sampling_rate, data=int16_pcm)
+    wav_buffer.<span class="func">seek</span>(<span class="num">0</span>)
+    <span class="kwd">return</span> <span class="obj">Response</span>(content=wav_buffer.<span class="func">getvalue</span>(), media_type=<span class="str">"audio/wav"</span>)</code></pre>
+            </div>
+        </div>
+
+        <!-- Slide 8: Parsing Deterministik -->
+        <div class="slide">
+            <span class="badge">Efisiensi Inferensi</span>
+            <h2>Ekstraksi Landmark Sekali Jalan</h2>
+            <div class="split-layout">
+                <div>
+                    <p class="subtitle" style="margin-bottom: 12px;">Tanpa butuh model tambahan untuk validasi input[cite: 1].</p>
+                    <ul class="details-list">
+                        <li><strong>Cukup 1 Prompt:</strong> LLM bertindak sekaligus sebagai pemandu wisata dan validator keaslian kota dalam satu inferensi[cite: 1].</li>
+                        <li><strong>Regex Parser:</strong> Klien lokal tinggal mengekstrak tag delimiter terstruktur untuk mengambil landmark dan makanan khas[cite: 1].</li>
+                        <li><strong>Hemat Komputasi GPU:</strong> Kalau keluar tag <code style="color:var(--accent-pink);">[VALID_CITY: NO]</code>, proses render gambar langsung dibatalkan[cite: 1].</li>
+                    </ul>
+                </div>
+                <div class="mac-window">
+                    <div class="mac-header">
+                        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+                        <span class="mac-title">client_parser.py</span>
+                    </div>
+                    <pre class="code-container"><code><span class="comment"># Regex buat nyari tag balasan dari sistem[cite: 1]</span>
+pattern = <span class="str">r"\[VALID_CITY:\s*([^\]]+)\]"</span>
+match = re.<span class="func">search</span>(pattern, raw_reply)
+
+<span class="kwd">if</span> match <span class="kwd">and</span> <span class="str">"YES"</span> <span class="kwd">in</span> match.<span class="func">group</span>(<span class="num">1</span>):
+    is_valid = <span class="kwd">True</span>
+    <span class="comment"># Ambil landmark, kuliner, dan budaya[cite: 1]</span>
+    highlights = <span class="func">parse_metadata</span>(match)
+<span class="kwd">else</span>:
+    <span class="comment"># Lewatin proses bikin gambar biar hemat komputasi[cite: 1]</span>
+    is_valid = <span class="kwd">False</span></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Kesimpulan -->
+        <div class="slide">
+            <span class="badge">Rangkuman Proyek</span>
+            <h2>Poin Kunci Engineering</h2>
+            <p class="subtitle">Membangun pipeline AI bertenaga di atas infrastruktur cloud gratisan[cite: 1].</p>
+
+            <div class="grid-cards">
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Efisiensi Resource</h3>
+                    <p>Bisa menjalankan model teks, suara, dan gambar secara berdampingan dengan cuma memakan 6.5 GB VRAM[cite: 1].</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🔒</div>
+                    <h3>Bypass Boundary Jaringan</h3>
+                    <p>Menghubungkan UI lokal ke cloud VM terisolasi dengan aman lewat tunnel reverse proxy ngrok[cite: 1].</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🏎️</div>
+                    <h3>Throughput Kencang</h3>
+                    <p>Aliran byte langsung via RAM memori murni (<code style="color:var(--accent-cyan);">io.BytesIO</code>) tanpa beban pembacaan harddisk[cite: 1].</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navigasi -->
+    <div class="controls">
+        <button class="nav-btn" id="prevBtn" title="Slide Sebelumnya">←</button>
+        <div class="progress-dots" id="dotContainer"></div>
+        <button class="nav-btn" id="nextBtn" title="Slide Berikutnya">→</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotContainer = document.getElementById('dotContainer');
+        let currentSlide = 0;
+
+        slides.forEach((_, idx) => {
+            const dot = document.createElement('div');
+            dot.classList.add('dot-nav');
+            if (idx === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(idx));
+            dotContainer.appendChild(dot);
+        });
+
+        const dots = document.querySelectorAll('.dot-nav');
+
+        function updateSlide() {
+            slides.forEach((slide, idx) => {
+                slide.classList.toggle('active', idx === currentSlide);
+                dots[idx].classList.toggle('active', idx === currentSlide);
+            });
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToSlide(idx) {
+            currentSlide = idx;
+            updateSlide();
+        }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>

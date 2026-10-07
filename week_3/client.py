@@ -23,7 +23,7 @@ from reportlab.lib import colors
 # -----------------------------------------------------------------------------
 # Global Configuration & Defaults
 # -----------------------------------------------------------------------------
-DEFAULT_BACKEND_URL: str = "http://localhost:8000"
+DEFAULT_BACKEND_URL: str = "https://plenty-panhandle-massive.ngrok-free.dev"
 REQUEST_TIMEOUT_SECONDS: int = 300  # 5 minutes for processing longer audio files
 
 
@@ -418,13 +418,7 @@ def build_interface() -> gr.Blocks:
     """
     Constructs and styles the Gradio Blocks UI application.
     """
-    theme = gr.themes.Soft(
-        primary_hue="indigo",
-        secondary_hue="blue",
-        neutral_hue="slate",
-    )
-
-    with gr.Blocks(theme=theme, title="Audio Meeting Summarizer") as demo:
+    with gr.Blocks(title="Audio Meeting Summarizer") as demo:
         # Header section
         gr.Markdown(
             """
@@ -487,12 +481,20 @@ def build_interface() -> gr.Blocks:
                         )
 
                     with gr.TabItem("📝 Full Transcription"):
-                        transcript_output = gr.Textbox(
-                            label="Transcribed Meeting Dialogue",
-                            placeholder="Full transcription will appear here...",
-                            lines=12,
-                            show_copy_button=True,
-                        )
+                        # Configured with max_lines and autoscroll=False for a dedicated scrollable viewport
+                        tb_kwargs = {
+                            "label": "Transcribed Meeting Dialogue",
+                            "placeholder": "Full transcription will appear here...",
+                            "lines": 10,
+                            "max_lines": 18,
+                            "autoscroll": False,
+                        }
+                        if "buttons" in gr.Textbox.__init__.__code__.co_varnames:
+                            tb_kwargs["buttons"] = ["copy"]
+                        elif "show_copy_button" in gr.Textbox.__init__.__code__.co_varnames:
+                            tb_kwargs["show_copy_button"] = True
+
+                        transcript_output = gr.Textbox(**tb_kwargs)
 
                     with gr.TabItem("📊 Execution Telemetry"):
                         telemetry_output = gr.Markdown(
@@ -538,5 +540,15 @@ def build_interface() -> gr.Blocks:
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
     demo_app = build_interface()
-    # launch locally on port 7860
-    demo_app.launch(server_name="0.0.0.0", server_port=7860, share=False)
+    theme = gr.themes.Soft(
+        primary_hue="indigo",
+        secondary_hue="blue",
+        neutral_hue="slate",
+    )
+    # Launch locally on port 7860 (theme passed to launch() as required in Gradio 6.0+)
+    demo_app.launch(
+        theme=theme,
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+    )

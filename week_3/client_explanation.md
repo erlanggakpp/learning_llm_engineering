@@ -206,13 +206,13 @@ Creates an interoperable Markdown export formatted for knowledge-base indexing (
 
 ---
 
-### 7. Gradio UI Layout Construction (`build_interface`, Lines 408–515)
+### 7. Gradio UI Layout Construction (`build_interface`, Lines 417–533)
 
 ```python
 def build_interface() -> gr.Blocks:
 ```
 
-Constructs the UI using Gradio Blocks and a modern `Soft` indigo/blue palette:
+Constructs the UI using Gradio Blocks:
 
 1. **Header & Connection Accordion:**
    - Textbox for entering the Colab ngrok URL.
@@ -222,7 +222,7 @@ Constructs the UI using Gradio Blocks and a modern `Soft` indigo/blue palette:
    - **Left Column (40% width):** Audio upload/recording component (`gr.Audio`), expandable accordion with min/max summary token sliders, and a prominent "Transcribe & Summarize" trigger button.
    - **Right Column (60% width):**
      - Tab 1: **Executive Summary** (formatted Markdown).
-     - Tab 2: **Full Transcription** (textbox with built-in copy-to-clipboard button).
+     - Tab 2: **Full Transcription** (scrollable viewport constrained by `max_lines=18` with `autoscroll=False` and copy support via `buttons=['copy']`).
      - Tab 3: **Execution Telemetry** (latency breakdown table).
      - Export area: Two `gr.DownloadButton` widgets for downloading the generated `.pdf` and `.md` files.
 3. **Event Bindings:**
@@ -231,15 +231,26 @@ Constructs the UI using Gradio Blocks and a modern `Soft` indigo/blue palette:
 
 ---
 
-### 8. Execution Entry Point (Lines 518–525)
+### 8. Execution Entry Point (Lines 536–551)
 
 ```python
 if __name__ == "__main__":
     demo_app = build_interface()
-    demo_app.launch(server_name="0.0.0.0", server_port=7860, share=False)
+    theme = gr.themes.Soft(
+        primary_hue="indigo",
+        secondary_hue="blue",
+        neutral_hue="slate",
+    )
+    # Launch locally on port 7860 (passing theme to launch() as required in Gradio 6.0+)
+    demo_app.launch(
+        theme=theme,
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+    )
 ```
 
-Launches the local web server on port `7860`, accessible at `http://localhost:7860`.
+Launches the local web server on port `7860`, passing the theme to `launch()` as required by Gradio 6.0+. Accessible at `http://localhost:7860`.
 
 ---
 
