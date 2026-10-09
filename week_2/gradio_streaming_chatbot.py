@@ -2,13 +2,38 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 import gradio as gr
+import subprocess
 
 # Load environment variables if available
 load_dotenv()
 
 # Model and client configuration (referencing week_2/gradio_interface.py)
-MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+MODEL = os.getenv("OLLAMA_MODEL", "phi3")
+def get_ollama_base_url() -> str:
+    """
+    Returns the appropriate Ollama OpenAI endpoint depending on whether
+    the script is executed inside WSL2 or natively on Windows/Linux.
+    """
+    env_url = os.getenv("OLLAMA_BASE_URL")
+    if env_url:
+        return env_url
+
+    # Check if running inside WSL2
+    if os.path.exists("/proc/sys/fs/binfmt_misc/WSLInterop"):
+        try:
+            # Resolve default route gateway (Windows Host IP)
+            host_ip = subprocess.check_output(
+                "ip route | awk '/default/ {print $3}'",
+                shell=True,
+                text=True
+            ).strip()
+            return f"http://{host_ip}:11434/v1"
+        except Exception:
+            pass
+
+    return "http://localhost:11434/v1"
+
+OLLAMA_BASE_URL = get_ollama_base_url()
 
 # Initialize client pointing to local Ollama server
 openai = OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama")
