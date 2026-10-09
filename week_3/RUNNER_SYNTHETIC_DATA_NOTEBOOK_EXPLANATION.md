@@ -610,10 +610,13 @@ def execute_inference(
 
 ---
 
-### Step 5: Telemetry Parsing & Physiological Sanity Check Engine
+### Step 5: Telemetry Parsing, Kinematic Reconciliation & Sanity Check Engine
 
-This section provides automated algorithmic verification of the generated output:
+This section provides automated parsing, display normalization, and algorithmic verification of the generated output:
 - **`parse_telemetry_records(text, data_format)`**: Handles JSON arrays, CSV comma-separated rows, and Markdown pipe tables using regex and `csv.DictReader`.
+- **`pretty_format_and_reconcile_output(text, data_format, reconcile_kinematics=True)`**:
+  - Re-serializes JSON datasets into pretty-printed, indented JSON (`indent=2`) to guarantee multi-line syntax-highlighted presentation in frontend tabs (eliminating compressed single-line JSON).
+  - Performs kinematic auto-reconciliation: enforces $\text{duration\_minutes} = \text{round}(\text{distance\_km} \times \text{pace\_min\_per\_km}, 1)$ to eliminate minor arithmetic hallucinations from stochastic LLM sampling.
 - **`evaluate_physiological_sanity(records, workout_type, athlete_profile)`**:
   - Tests **Heart Rate Cardinality**: Verifies that every single record obeys `max_heart_rate_bpm > avg_heart_rate_bpm`.
   - Tests **Cardiovascular Range**: Confirms all heart rates remain within human physiological bounds (90–215 bpm).

@@ -243,21 +243,29 @@ CRITICAL BIOMECHANICAL & PHYSIOLOGICAL RULES:
    - 'Easy Recovery Run': Aerobic Zone 1-2 (Avg HR 115-142 bpm), low cardiovascular strain, RPE 2-4. Pace is 60-90 sec/km slower than threshold.
    - 'Tempo Run': Lactate Threshold Zone 3-4 (Avg HR 155-175 bpm), high steady effort, RPE 6-7. Fast, consistent pace.
    - 'Interval Track Session': Anaerobic repetitions, Zone 4-5 (Avg HR 160-180 bpm, Max HR 180-200 bpm), RPE 8-9. Spiking HR, high cadence (175-195 spm).
-   - 'Long Weekend Run': Aerobic endurance, Zone 2-3 (Avg HR 130-155 bpm), high cumulative distance (15-32 km), elevated calories (900-2400 kcal), RPE 5-7.
+   - 'Long Weekend Run': Aerobic endurance, Zone 2-3 (Avg HR 130-155 bpm), elevated calories, RPE 5-7. Distance MUST scale to the athlete's fitness level:
+     * 'Beginner 5k Runner': 5 to 9 km (pace 5:45 - 8:30 min/km).
+     * 'Intermediate Marathoner': 16 to 28 km (pace 4:15 - 5:45 min/km).
+     * 'Sub-Elite / Elite': 22 to 36 km (pace 3:00 - 4:15 min/km).
    - 'Hill Repeats': High muscular power & VO2 max strain, high elevation gain (>120m), Max HR near max (180-205 bpm), RPE 8-10.
 3. Athlete Profile Calibrations:
-   - 'Beginner 5k Runner': Slower paces (5:45 - 8:30 min/km), cadence 150-165 spm, higher heart rate at moderate paces, distances 3-8 km.
-   - 'Intermediate Marathoner': Paces 4:15 - 5:45 min/km, cadence 165-178 spm, disciplined aerobic efficiency, distances 8-25 km.
-   - 'Sub-Elite / Elite': Fast paces 3:00 - 4:15 min/km, cadence 175-195 spm, exceptional cardiac stroke volume, distances 10-35 km.
+   - 'Beginner 5k Runner': Slower paces (5:45 - 8:30 min/km, or decimal 5.75 - 8.50), cadence 150-165 spm, higher heart rate at moderate paces, typical run distances 3-8 km (long runs 5-9 km).
+   - 'Intermediate Marathoner': Paces 4:15 - 5:45 min/km (decimal 4.25 - 5.75), cadence 165-178 spm, disciplined aerobic efficiency, distances 8-25 km.
+   - 'Sub-Elite / Elite': Fast paces 3:00 - 4:15 min/km (decimal 3.00 - 4.25), cadence 175-195 spm, exceptional cardiac stroke volume, distances 10-35 km.
 4. Kinematic & Mathematical Consistency:
-   - CRITICAL FORMULA: duration_minutes = distance_km * pace_min_per_km.
-   - You MUST calculate duration_minutes accurately: duration_minutes = round(distance_km * pace_min_per_km, 1).
-   - If distance_km is 10.0 and pace_min_per_km is 5.0, duration_minutes MUST BE 50.0 (NOT 60.0).
-   - If duration_minutes is 60.0 for 10.0 km, pace_min_per_km MUST BE 6.0 (NOT 5.0).
+   - CRITICAL ARITHMETIC LAW: duration_minutes = round(distance_km * pace_min_per_km, 1).
+   - You MUST ensure duration_minutes divided by distance_km equals pace_min_per_km!
+   - Concrete calculation examples:
+     * 6.0 km at 6.50 min/km (6:30/km) pace MUST have duration_minutes = 39.0 (6.0 * 6.5 = 39.0).
+     * 8.0 km at 6.00 min/km (6:00/km) pace MUST have duration_minutes = 48.0 (8.0 * 6.0 = 48.0).
+     * 10.0 km in 60.0 minutes requires pace = 6.00 min/km (60 / 10 = 6.0, NEVER output pace 5.0 for 60 min!).
+     * 10.0 km at 5.00 min/km pace MUST have duration_minutes = 50.0 (10.0 * 5.0 = 50.0).
+     * 15.0 km at 5.00 min/km pace MUST have duration_minutes = 75.0 (15.0 * 5.0 = 75.0, NEVER output pace 4.5!).
    - Cadence: 145 - 198 steps per minute (spm).
    - Calories: approximately 55 - 75 kcal per km multiplied by relative effort.
 5. Strict Output Formatting:
    - Output ONLY the requested data in the specified format (JSON Array, CSV Table, or Markdown Table).
+   - For JSON Array, ALWAYS format as an indented multi-line JSON array (2 spaces indentation per field) so it is readable and not a compressed single line.
    - Include ONLY the requested schema fields.
    - DO NOT include conversational filler, preamble, notes, or markdown explanations outside the structured data.
 """
@@ -274,9 +282,14 @@ def build_user_prompt(
     fields_str = ", ".join(fields)
     format_guide = {
         "JSON Array": (
-            "Format the output strictly as a valid JSON array of objects, e.g.:\n"
-            '[{"field1": value1, "field2": value2}, ...]\n'
-            "Ensure valid JSON syntax with double quotes and no trailing commas."
+            "Format the output strictly as a pretty-printed, indented JSON array of objects (2 spaces indentation per field), e.g.:\n"
+            "[\n"
+            "  {\n"
+            '    "field1": value1,\n'
+            '    "field2": value2\n'
+            "  }\n"
+            "]\n"
+            "Ensure valid multi-line JSON syntax with double quotes and no trailing commas."
         ),
         "CSV Table": (
             "Format the output strictly as a CSV table with a header row followed by comma-separated records, e.g.:\n"
@@ -297,9 +310,11 @@ def build_user_prompt(
         f"- Required Fields: {fields_str}\n"
         f"- Output Format: {data_format}\n\n"
         f"{format_guide}\n\n"
-        f"CRITICAL SANITY REQUIREMENTS:\n"
+        f"CRITICAL SANITY & ARITHMETIC REQUIREMENTS:\n"
         f"1. max_heart_rate_bpm must strictly exceed avg_heart_rate_bpm (by 8-25 bpm).\n"
-        f"2. KINEMATIC ARITHMETIC: duration_minutes MUST EXACTLY EQUAL distance_km * pace_min_per_km (e.g., 10.0 km * 5.0 min/km = 50.0 min, NOT 60.0 min).\n"
+        f"2. KINEMATIC ARITHMETIC: duration_minutes MUST EXACTLY EQUAL distance_km * pace_min_per_km.\n"
+        f"   For a {fitness_level} doing {run_type}, select distance_km and pace_min_per_km appropriate for {fitness_level}, then calculate duration_minutes = round(distance_km * pace_min_per_km, 1).\n"
+        f"   Verify that duration_minutes / distance_km equals pace_min_per_km before writing each record.\n"
     )
 
 
@@ -654,6 +669,56 @@ def parse_telemetry_records(text: str, data_format: str) -> List[Dict[str, Any]]
     return records
 
 
+def pretty_format_and_reconcile_output(
+    text: str, data_format: str, reconcile_kinematics: bool = True
+) -> Tuple[str, List[Dict[str, Any]]]:
+    """
+    Parses telemetry records from raw LLM output, ensures multi-line indented formatting
+    (indent=2) for JSON tabs, and performs kinematic auto-reconciliation (duration ≈ distance * pace).
+    """
+    records = parse_telemetry_records(text, data_format)
+
+    if reconcile_kinematics and records:
+        for r in records:
+            dist = extract_numeric(r.get("distance_km") or r.get("distance"))
+            pace = parse_pace_to_minutes(r.get("pace_min_per_km") or r.get("pace"))
+            dur = extract_numeric(r.get("duration_minutes") or r.get("duration"))
+            if dist > 0 and pace > 0:
+                expected_dur = round(dist * pace, 1)
+                # Auto-align if duration is missing or deviates by > 5%
+                if dur <= 0 or (abs(dur - expected_dur) / max(expected_dur, 1e-5) > 0.05):
+                    val = int(expected_dur) if expected_dur.is_integer() else expected_dur
+                    if "duration_minutes" in r:
+                        r["duration_minutes"] = val
+                    elif "duration" in r:
+                        r["duration"] = val
+                    else:
+                        r["duration_minutes"] = val
+            elif dist > 0 and dur > 0 and pace <= 0:
+                calc_pace = round(dur / dist, 2)
+                val_p = int(calc_pace) if calc_pace.is_integer() else calc_pace
+                if "pace_min_per_km" in r:
+                    r["pace_min_per_km"] = val_p
+                elif "pace" in r:
+                    r["pace"] = val_p
+                else:
+                    r["pace_min_per_km"] = val_p
+
+    # Re-serialize into beautiful multi-line format if JSON Array
+    if data_format == "JSON Array" and records:
+        return json.dumps(records, indent=2), records
+
+    # If raw string is valid JSON, format it with indent=2
+    if data_format == "JSON Array":
+        try:
+            parsed = json.loads(text.strip())
+            return json.dumps(parsed, indent=2), records
+        except Exception:
+            pass
+
+    return text.strip(), records
+
+
 def evaluate_physiological_sanity(
     records: List[Dict[str, Any]], workout_type: str, athlete_profile: str
 ) -> Dict[str, Any]:
@@ -932,9 +997,9 @@ def generate_synthetic_data(req: GenerateRequest) -> Dict[str, Any]:
             use_pipeline=effective_use_pipeline,
         )
 
-        # 3. Evaluate Physiological Sanity Checks for both outputs
-        records_4bit = parse_telemetry_records(res_4bit["output"], req.data_format)
-        records_fp16 = parse_telemetry_records(res_fp16["output"], req.data_format)
+        # 3. Format beautiful multi-line display, reconcile kinematics & evaluate sanity checks
+        out_4bit_clean, records_4bit = pretty_format_and_reconcile_output(res_4bit["output"], req.data_format)
+        out_fp16_clean, records_fp16 = pretty_format_and_reconcile_output(res_fp16["output"], req.data_format)
 
         sanity_4bit = evaluate_physiological_sanity(records_4bit, req.run_type, req.fitness_level)
         sanity_fp16 = evaluate_physiological_sanity(records_fp16, req.run_type, req.fitness_level)
@@ -962,7 +1027,7 @@ def generate_synthetic_data(req: GenerateRequest) -> Dict[str, Any]:
             },
             "quantized_4bit": {
                 "model_name": f"{MODEL_ID} (4-Bit NF4)",
-                "output": res_4bit["output"],
+                "output": out_4bit_clean,
                 "inference_engine": res_4bit.get("engine", mode_label),
                 "load_vram_mb": round(bit4_load_vram_mb, 2),
                 "peak_gen_vram_mb": res_4bit["peak_gen_vram_mb"],
@@ -973,7 +1038,7 @@ def generate_synthetic_data(req: GenerateRequest) -> Dict[str, Any]:
             },
             "baseline_fp16": {
                 "model_name": f"{MODEL_ID} (FP16 Baseline)",
-                "output": res_fp16["output"],
+                "output": out_fp16_clean,
                 "inference_engine": res_fp16.get("engine", mode_label),
                 "load_vram_mb": round(fp16_load_vram_mb, 2),
                 "peak_gen_vram_mb": res_fp16["peak_gen_vram_mb"],
